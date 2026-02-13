@@ -25,15 +25,16 @@ struct Args {
     /// Second sequence
     #[arg(short = '2', long)]
     sequence2: String,
+
+    /// Whether viper should perform local alignment
+    #[arg(short, long, action)]
+    local: bool,
 }
 
 fn main() {
     let args = Args::parse();
 
-    let sequence1 = args.sequence1.trim();
-    let sequence2 = args.sequence2.trim();
-
-    let alignment = align_sequences(sequence1, sequence2);
+    let alignment = align_sequences(&args.sequence1, &args.sequence2, args.local);
 
     alignment.print_alignment();
 }

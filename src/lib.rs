@@ -3,12 +3,12 @@ mod matrix;
 
 use constants::{GAP_EXTENSION_PENALTY, GAP_PENALTY};
 use itertools::Itertools;
-use matrix::Matrix;
+use matrix::{AlignmentMode, Matrix};
 
-enum VariantType {
+enum Pointer {
+    PRIMARY,
     INS,
     DEL,
-    MIS,
 }
 
 pub struct Alignment {
@@ -37,57 +37,57 @@ fn retrieve_alignment(seq1: &Vec<char>, seq2: &Vec<char>, matrix: &Matrix) -> Al
         aligned_seq1: vec![],
         aligned_seq2: vec![],
     };
-    let mut i = seq1.len();
-    let mut j = seq2.len();
-    let mut var = VariantType::MIS;
+    let (mut i, mut j) = matrix.start_key;
+    let mut pointer = Pointer::PRIMARY;
 
     while i > 0 || j > 0 {
-        if matches!(var, VariantType::MIS)
-            && matrix.primary.get(&(i, j)).unwrap() == matrix.aux_del.get(&(i, j)).unwrap()
-        {
-            var = VariantType::DEL;
-        } else if matches!(var, VariantType::MIS)
-            && matrix.primary.get(&(i, j)).unwrap() == matrix.aux_ins.get(&(i, j)).unwrap()
-        {
-            var = VariantType::INS;
-        } else if matches!(var, VariantType::DEL)
+        let curr_primary = matrix.primary.get(&(i, j)).unwrap();
+
+        if matches!(matrix.alignment_mode, AlignmentMode::Local) && *curr_primary == 0 {
+            break;
+        }
+
+        let curr_ins = matrix.aux_ins.get(&(i, j)).unwrap();
+        let curr_del = matrix.aux_del.get(&(i, j)).unwrap();
+
+        if matches!(pointer, Pointer::PRIMARY) && curr_primary == curr_del {
+            pointer = Pointer::DEL;
+        } else if matches!(pointer, Pointer::PRIMARY) && curr_primary == curr_ins {
+            pointer = Pointer::INS;
+        } else if matches!(pointer, Pointer::DEL)
             && i > 0
-            && *matrix.aux_del.get(&(i - 1, j)).unwrap()
-                == matrix.aux_del.get(&(i, j)).unwrap() + GAP_EXTENSION_PENALTY
+            && *matrix.aux_del.get(&(i - 1, j)).unwrap() == curr_del + GAP_EXTENSION_PENALTY
         {
             alignment.aligned_seq1.push(seq1[i - 1]);
             alignment.aligned_seq2.push('-');
             i -= 1;
-        } else if matches!(var, VariantType::DEL)
+        } else if matches!(pointer, Pointer::DEL)
             && i > 0
-            && *matrix.primary.get(&(i - 1, j)).unwrap()
-                == matrix.aux_del.get(&(i, j)).unwrap() + GAP_PENALTY
+            && *matrix.primary.get(&(i - 1, j)).unwrap() == curr_del + GAP_PENALTY
         {
             alignment.aligned_seq1.push(seq1[i - 1]);
             alignment.aligned_seq2.push('-');
-            var = VariantType::MIS;
+            pointer = Pointer::PRIMARY;
             i -= 1;
-        } else if matches!(var, VariantType::INS)
+        } else if matches!(pointer, Pointer::INS)
             && j > 0
-            && *matrix.aux_ins.get(&(i, j - 1)).unwrap()
-                == matrix.aux_ins.get(&(i, j)).unwrap() + GAP_EXTENSION_PENALTY
+            && *matrix.aux_ins.get(&(i, j - 1)).unwrap() == curr_ins + GAP_EXTENSION_PENALTY
         {
             alignment.aligned_seq1.push('-');
             alignment.aligned_seq2.push(seq2[j - 1]);
             j -= 1;
-        } else if matches!(var, VariantType::INS)
+        } else if matches!(pointer, Pointer::INS)
             && j > 0
-            && *matrix.primary.get(&(i, j - 1)).unwrap()
-                == matrix.aux_ins.get(&(i, j)).unwrap() + GAP_PENALTY
+            && *matrix.primary.get(&(i, j - 1)).unwrap() == curr_ins + GAP_PENALTY
         {
             alignment.aligned_seq1.push('-');
             alignment.aligned_seq2.push(seq2[j - 1]);
-            var = VariantType::MIS;
+            pointer = Pointer::PRIMARY;
             j -= 1;
         } else {
             alignment.aligned_seq1.push(seq1[i - 1]);
             alignment.aligned_seq2.push(seq2[j - 1]);
-            var = VariantType::MIS;
+            pointer = Pointer::PRIMARY;
             i -= 1;
             j -= 1;
         }
@@ -98,10 +98,20 @@ fn retrieve_alignment(seq1: &Vec<char>, seq2: &Vec<char>, matrix: &Matrix) -> Al
     alignment
 }
 
-pub fn align_sequences(sequence1: &str, sequence2: &str) -> Alignment {
-    let seq1_chars = sequence1.chars().collect();
-    let seq2_chars = sequence2.chars().collect();
+fn split_chars(sequence: &str) -> Vec<char> {
+    sequence.trim().chars().collect()
+}
 
-    let matrix = Matrix::create(&seq1_chars, &seq2_chars);
+pub fn align_sequences(sequence1: &str, sequence2: &str, local: bool) -> Alignment {
+    let seq1_chars = split_chars(sequence1);
+    let seq2_chars = split_chars(sequence2);
+
+    let mode = if local {
+        AlignmentMode::Local
+    } else {
+        AlignmentMode::Global
+    };
+
+    let matrix = Matrix::create(&seq1_chars, &seq2_chars, mode);
     retrieve_alignment(&seq1_chars, &seq2_chars, &matrix)
 }
