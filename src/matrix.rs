@@ -1,12 +1,8 @@
 use std::cmp;
 use std::{collections::HashMap, i32};
 
+use crate::alignment::AlignmentMode;
 use crate::constants::{GAP_EXTENSION_PENALTY, GAP_PENALTY, MATCH_SCORE, MISMATCH_PENALTY};
-
-pub enum AlignmentMode {
-    Global,
-    Local,
-}
 
 pub struct Matrix {
     pub primary: HashMap<(usize, usize), i32>,
@@ -57,16 +53,13 @@ impl Matrix {
             for j in 1..=seq2.len() {
                 let ins_gap = matrix.get(&(i, j - 1)).unwrap() - GAP_PENALTY;
                 let ins_ext = insertions.get(&(i, j - 1)).unwrap() - GAP_EXTENSION_PENALTY;
-                insertions.insert((i, j), cmp::max(ins_gap, ins_ext));
+                let max_ins_core = cmp::max(ins_gap, ins_ext);
+                insertions.insert((i, j), max_ins_core);
 
                 let del_gap = matrix.get(&(i - 1, j)).unwrap() - GAP_PENALTY;
                 let del_ext = deletions.get(&(i - 1, j)).unwrap() - GAP_EXTENSION_PENALTY;
-                deletions.insert((i, j), cmp::max(del_gap, del_ext));
-
-                let ins_or_del = *cmp::max(
-                    insertions.get(&(i, j)).unwrap(),
-                    deletions.get(&(i, j)).unwrap(),
-                );
+                let max_del_score = cmp::max(del_gap, del_ext);
+                deletions.insert((i, j), max_del_score);
 
                 let match_or_mismatch = if seq1[i - 1] == seq2[j - 1] {
                     matrix.get(&(i - 1, j - 1)).unwrap() + MATCH_SCORE
@@ -74,7 +67,12 @@ impl Matrix {
                     matrix.get(&(i - 1, j - 1)).unwrap() - MISMATCH_PENALTY
                 };
 
-                matrix.insert((i, j), cmp::max(ins_or_del, match_or_mismatch));
+                let score = *[max_ins_core, max_del_score, match_or_mismatch]
+                    .iter()
+                    .max()
+                    .unwrap();
+
+                matrix.insert((i, j), score);
 
                 if i == seq1.len() && j == seq2.len() {
                     start_key = (i, j);
