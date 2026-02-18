@@ -14,10 +14,13 @@ cargo install --path .
 
 ## Usage
 
-Specify the sequences to be aligned in the parameters `-1` (or `--sequence1`) and `-2` (or `--sequence2`):
+Sequences to be aligned should be provided in FASTA files. Specify them in the parameters `-1` (or `--fasta1`) and `-2` (or `--fasta2`):
 
 ```bash
-viper -1 AGGTGTAGAGAT -2 AAGGAGTATGAAG
+echo ">seq1\nAGGTGTAGAGAT" > seq1.fa
+echo ">seq2\nAAGGAGTATGAAG" > seq2.fa
+
+viper -1 seq1.fa -2 seq2.fa
 ```
 
 The output is printed in stdout. It shows the conserved positions as well as insertions and deletions in both sequences:
@@ -31,7 +34,10 @@ Viper default alignment mode is global. It expects sequences similar in size and
 
 **Global mode**
 ```bash
-viper -1 GCCCGGTTACGCTAGGGGGCACGAGCATGCAG -2 GCCGGGGTCGTTTTCAGCGGTTACGCTAGTTA
+echo ">seq1\nGCCCGGTTACGCTAGGGGGCACGAGCATGCAG" > seq1.fa
+echo ">seq2\nGCCGGGGTCGTTTTCAGCGGTTACGCTAGTTA" > seq2.fa
+
+viper -1 seq1.fa -2 seq2.fa
 ```
 
 Output:
@@ -43,7 +49,7 @@ GCC-GGGGT--CGTTTTC-AGCGGTT---ACG--C-T--AGTTA
 
 **Local mode**
 ```bash
-viper -1 GCCCGGTTACGCTAGGGGGCACGAGCATGCAG -2 GCCGGGGTCGTTTTCAGCGGTTACGCTAGTTA --local
+viper -1 seq1.fa -2 seq2.fa --local
 ```
 
 Output:
