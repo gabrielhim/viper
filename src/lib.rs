@@ -85,14 +85,7 @@ fn retrieve_alignment(seq1: Vec<char>, seq2: Vec<char>, matrix: Matrix) -> Align
     }
 }
 
-fn split_chars(sequence: &str) -> Vec<char> {
-    sequence.trim().chars().collect()
-}
-
-pub fn align_sequences(sequence1: &str, sequence2: &str, local: bool) -> Alignment {
-    let seq1_chars = split_chars(sequence1);
-    let seq2_chars = split_chars(sequence2);
-
+pub fn align_sequences(seq1_chars: Vec<char>, seq2_chars: Vec<char>, local: bool) -> Alignment {
     let mode = if local {
         AlignmentMode::Local
     } else {
