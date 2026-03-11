@@ -4,18 +4,25 @@ Viper is a simple, yet fast and precise command-line tool for pairwise alignment
 
 ## Installation
 
-Installation requires cloning the project and running `cargo install`:
-
+One way to install viper is to clone the project and run `cargo install`:
 ```bash
 git clone https://github.com/gabrielhim/viper.git
 cd viper
 cargo install --path .
+viper --help
+```
+
+Alternatively, you can download the binary directly from the release and copy it to a directory in $PATH:
+```bash
+wget https://github.com/gabrielhim/viper/releases/download/v1.0.0/viper
+chmod +x viper
+cp viper ~/.local/bin/
+viper --help
 ```
 
 ## Usage
 
 Sequences to be aligned should be provided in FASTA files. Specify them in the parameters `-1` (or `--fasta1`) and `-2` (or `--fasta2`):
-
 ```bash
 echo ">seq1\nAGGTGTAGAGAT" > seq1.fa
 echo ">seq2\nAAGGAGTATGAAG" > seq2.fa
