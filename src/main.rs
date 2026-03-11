@@ -6,10 +6,18 @@ use viper::align_sequences;
 
 fn define_styles() -> Styles {
     Styles::styled()
-        .usage(Style::new().fg_color(Some(Color::Ansi(AnsiColor::Green))))
-        .header(Style::new().fg_color(Some(Color::Ansi(AnsiColor::Green))))
-        .literal(Style::new().fg_color(Some(Color::Ansi(AnsiColor::Blue))))
-        .placeholder(Style::new().fg_color(Some(Color::Ansi(AnsiColor::BrightBlue))))
+        .usage(
+            Style::new()
+                .bold()
+                .fg_color(Some(Color::Ansi(AnsiColor::BrightGreen))),
+        )
+        .header(
+            Style::new()
+                .bold()
+                .fg_color(Some(Color::Ansi(AnsiColor::BrightGreen))),
+        )
+        .literal(Style::new().fg_color(Some(Color::Ansi(AnsiColor::Cyan))))
+        .placeholder(Style::new().fg_color(Some(Color::Ansi(AnsiColor::Cyan))))
 }
 
 fn read_fasta_file(file_path: &str) -> Vec<char> {
