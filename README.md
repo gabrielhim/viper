@@ -12,11 +12,11 @@ cargo install --path .
 viper --help
 ```
 
-Alternatively, you can download the binary directly from the release and copy it to a directory in $PATH:
+If you are using a Linux environment, you can also download the binary directly from the release and copy it to a directory in $PATH:
 ```bash
 wget https://github.com/gabrielhim/viper/releases/download/v1.0.0/viper
 chmod +x viper
-cp viper ~/.local/bin/
+cp viper /usr/local/bin/
 viper --help
 ```
 
