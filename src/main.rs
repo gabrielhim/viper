@@ -64,11 +64,11 @@ struct Args {
     #[arg(short, long, action)]
     local: bool,
 
-    /// Score to use when positions match
-    #[arg(short, long, default_value_t = 1)]
+    /// Score for matching positions
+    #[arg(short, long, default_value_t = 2)]
     match_score: i32,
 
-    /// Penalization for every substitution found
+    /// Penalization for every substitution
     #[arg(short = 's', long, default_value_t = 3)]
     mismatch_penalty: i32,
 
@@ -92,7 +92,7 @@ fn main() {
     let seq1_chars = read_fasta_file(&args.fasta1);
     let seq2_chars = read_fasta_file(&args.fasta2);
 
-    let alignment = align_sequences(
+    align_sequences(
         seq1_chars,
         seq2_chars,
         args.match_score,
@@ -101,6 +101,4 @@ fn main() {
         args.gap_extension_penalty,
         args.local,
     );
-
-    alignment.print_alignment();
 }

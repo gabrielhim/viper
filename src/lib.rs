@@ -20,6 +20,8 @@ fn retrieve_alignment(
     let mut aligned_seq1: VecDeque<char> = VecDeque::new();
     let mut aligned_seq2: VecDeque<char> = VecDeque::new();
 
+    let alignment_score = *matrix.primary.get(&matrix.start_key).unwrap();
+
     let (mut i, mut j) = matrix.start_key;
     let mut pointer = Pointer::PRIMARY;
 
@@ -81,6 +83,7 @@ fn retrieve_alignment(
         seq2,
         aligned_seq1,
         aligned_seq2,
+        alignment_score,
         start_idx_seq1: i,
         start_idx_seq2: j,
         end_idx_seq1: matrix.start_key.0,
@@ -96,7 +99,7 @@ pub fn align_sequences(
     gap_penalty: i32,
     gap_extension_penalty: i32,
     local: bool,
-) -> Alignment {
+) {
     let mode = if local {
         AlignmentMode::Local
     } else {
@@ -111,5 +114,8 @@ pub fn align_sequences(
     };
 
     let matrix = Matrix::create(&seq1_chars, &seq2_chars, mode, &scores);
-    retrieve_alignment(seq1_chars, seq2_chars, scores, matrix)
+    let alignment = retrieve_alignment(seq1_chars, seq2_chars, scores, matrix);
+
+    alignment.print_alignment();
+    alignment.print_alignment_score();
 }
