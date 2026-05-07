@@ -2,11 +2,18 @@ use itertools::Itertools;
 use std::cmp;
 use std::collections::VecDeque;
 
-use crate::constants::OUTPUT_ROW_SIZE;
+const OUTPUT_ROW_SIZE: usize = 80;
 
 pub enum AlignmentMode {
     Global,
     Local,
+}
+
+pub struct AlignmentScores {
+    pub match_score: i32,
+    pub mismatch_penalty: i32,
+    pub gap_penalty: i32,
+    pub gap_extension_penalty: i32,
 }
 
 pub struct Alignment {
@@ -14,6 +21,7 @@ pub struct Alignment {
     pub seq2: Vec<char>,
     pub aligned_seq1: VecDeque<char>,
     pub aligned_seq2: VecDeque<char>,
+    pub alignment_score: i32,
     pub start_idx_seq1: usize,
     pub start_idx_seq2: usize,
     pub end_idx_seq1: usize,
@@ -84,5 +92,10 @@ impl Alignment {
         println!("{}", out_aligned_seq1[start..].iter().join(""));
         println!("{}", bridges[start..].iter().join(""));
         println!("{}", out_aligned_seq2[start..].iter().join(""));
+    }
+
+    pub fn print_alignment_score(&self) {
+        println!("");
+        println!("Alignment score: {}", self.alignment_score);
     }
 }
