@@ -1,8 +1,7 @@
 use std::cmp;
 use std::{collections::HashMap, i32};
 
-use crate::alignment::AlignmentMode;
-use crate::constants::{GAP_EXTENSION_PENALTY, GAP_PENALTY, MATCH_SCORE, MISMATCH_PENALTY};
+use crate::alignment::{AlignmentMode, AlignmentScores};
 
 pub struct Matrix {
     pub primary: HashMap<(usize, usize), i32>,
@@ -13,14 +12,19 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn create(seq1: &Vec<char>, seq2: &Vec<char>, mode: AlignmentMode) -> Self {
+    pub fn create(
+        seq1: &Vec<char>,
+        seq2: &Vec<char>,
+        mode: AlignmentMode,
+        scores: &AlignmentScores,
+    ) -> Self {
         match mode {
-            AlignmentMode::Global => Self::create_global_matrix(seq1, seq2),
-            AlignmentMode::Local => Self::create_local_matrix(seq1, seq2),
+            AlignmentMode::Global => Self::create_global_matrix(seq1, seq2, scores),
+            AlignmentMode::Local => Self::create_local_matrix(seq1, seq2, scores),
         }
     }
 
-    fn create_global_matrix(seq1: &Vec<char>, seq2: &Vec<char>) -> Self {
+    fn create_global_matrix(seq1: &Vec<char>, seq2: &Vec<char>, scores: &AlignmentScores) -> Self {
         let mut matrix: HashMap<(usize, usize), i32> = HashMap::new();
         let mut insertions: HashMap<(usize, usize), i32> = HashMap::new();
         let mut deletions: HashMap<(usize, usize), i32> = HashMap::new();
@@ -36,12 +40,12 @@ impl Matrix {
         }
 
         for i in 1..=seq1.len() {
-            let penalty = -(GAP_PENALTY + (i as i32 - 1) * GAP_EXTENSION_PENALTY);
+            let penalty = -(scores.gap_penalty + (i as i32 - 1) * scores.gap_extension_penalty);
             deletions.insert((i, 0), penalty);
             matrix.insert((i, 0), *deletions.get(&(i, 0)).unwrap());
         }
         for j in 1..=seq2.len() {
-            let penalty = -(GAP_PENALTY + (j as i32 - 1) * GAP_EXTENSION_PENALTY);
+            let penalty = -(scores.gap_penalty + (j as i32 - 1) * scores.gap_extension_penalty);
             insertions.insert((0, j), penalty);
             matrix.insert((0, j), *insertions.get(&(0, j)).unwrap());
         }
@@ -51,20 +55,20 @@ impl Matrix {
 
         for i in 1..=seq1.len() {
             for j in 1..=seq2.len() {
-                let ins_gap = matrix.get(&(i, j - 1)).unwrap() - GAP_PENALTY;
-                let ins_ext = insertions.get(&(i, j - 1)).unwrap() - GAP_EXTENSION_PENALTY;
+                let ins_gap = matrix.get(&(i, j - 1)).unwrap() - scores.gap_penalty;
+                let ins_ext = insertions.get(&(i, j - 1)).unwrap() - scores.gap_extension_penalty;
                 let max_ins_core = cmp::max(ins_gap, ins_ext);
                 insertions.insert((i, j), max_ins_core);
 
-                let del_gap = matrix.get(&(i - 1, j)).unwrap() - GAP_PENALTY;
-                let del_ext = deletions.get(&(i - 1, j)).unwrap() - GAP_EXTENSION_PENALTY;
+                let del_gap = matrix.get(&(i - 1, j)).unwrap() - scores.gap_penalty;
+                let del_ext = deletions.get(&(i - 1, j)).unwrap() - scores.gap_extension_penalty;
                 let max_del_score = cmp::max(del_gap, del_ext);
                 deletions.insert((i, j), max_del_score);
 
                 let match_or_mismatch = if seq1[i - 1] == seq2[j - 1] {
-                    matrix.get(&(i - 1, j - 1)).unwrap() + MATCH_SCORE
+                    matrix.get(&(i - 1, j - 1)).unwrap() + scores.match_score
                 } else {
-                    matrix.get(&(i - 1, j - 1)).unwrap() - MISMATCH_PENALTY
+                    matrix.get(&(i - 1, j - 1)).unwrap() - scores.mismatch_penalty
                 };
 
                 let score = *[max_ins_core, max_del_score, match_or_mismatch]
@@ -89,7 +93,7 @@ impl Matrix {
         }
     }
 
-    fn create_local_matrix(seq1: &Vec<char>, seq2: &Vec<char>) -> Self {
+    fn create_local_matrix(seq1: &Vec<char>, seq2: &Vec<char>, scores: &AlignmentScores) -> Self {
         let mut matrix: HashMap<(usize, usize), i32> = HashMap::new();
         let mut insertions: HashMap<(usize, usize), i32> = HashMap::new();
         let mut deletions: HashMap<(usize, usize), i32> = HashMap::new();
@@ -112,20 +116,20 @@ impl Matrix {
 
         for i in 1..=seq1.len() {
             for j in 1..=seq2.len() {
-                let ins_gap = matrix.get(&(i, j - 1)).unwrap() - GAP_PENALTY;
-                let ins_ext = insertions.get(&(i, j - 1)).unwrap() - GAP_EXTENSION_PENALTY;
+                let ins_gap = matrix.get(&(i, j - 1)).unwrap() - scores.gap_penalty;
+                let ins_ext = insertions.get(&(i, j - 1)).unwrap() - scores.gap_extension_penalty;
                 let max_ins_score = *[0, ins_gap, ins_ext].iter().max().unwrap();
                 insertions.insert((i, j), max_ins_score);
 
-                let del_gap = matrix.get(&(i - 1, j)).unwrap() - GAP_PENALTY;
-                let del_ext = deletions.get(&(i - 1, j)).unwrap() - GAP_EXTENSION_PENALTY;
+                let del_gap = matrix.get(&(i - 1, j)).unwrap() - scores.gap_penalty;
+                let del_ext = deletions.get(&(i - 1, j)).unwrap() - scores.gap_extension_penalty;
                 let max_del_score = *[0, del_gap, del_ext].iter().max().unwrap();
                 deletions.insert((i, j), max_del_score);
 
                 let match_or_mismatch = if seq1[i - 1] == seq2[j - 1] {
-                    matrix.get(&(i - 1, j - 1)).unwrap() + MATCH_SCORE
+                    matrix.get(&(i - 1, j - 1)).unwrap() + scores.match_score
                 } else {
-                    matrix.get(&(i - 1, j - 1)).unwrap() - MISMATCH_PENALTY
+                    matrix.get(&(i - 1, j - 1)).unwrap() - scores.mismatch_penalty
                 };
 
                 let score = *[0, max_ins_score, max_del_score, match_or_mismatch]

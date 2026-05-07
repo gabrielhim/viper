@@ -2,11 +2,18 @@ use itertools::Itertools;
 use std::cmp;
 use std::collections::VecDeque;
 
-use crate::constants::OUTPUT_ROW_SIZE;
+const OUTPUT_ROW_SIZE: usize = 80;
 
 pub enum AlignmentMode {
     Global,
     Local,
+}
+
+pub struct AlignmentScores {
+    pub match_score: i32,
+    pub mismatch_penalty: i32,
+    pub gap_penalty: i32,
+    pub gap_extension_penalty: i32,
 }
 
 pub struct Alignment {
