@@ -1,5 +1,7 @@
 /target
 /tests
 .DS_Store
+.git*
+*.md
 *.fa
 *.fasta
